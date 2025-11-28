@@ -11,18 +11,18 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Unzip project
       run: unzip pos_printer_app_with_cloud.zip -d appsrc
 
     - name: Set up JDK
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: "17"
         distribution: "temurin"
 
-    - name: Set executable permissions
+    - name: Give gradlew permission
       run: chmod +x ./appsrc/gradlew
 
     - name: Build Debug APK
@@ -30,8 +30,8 @@ jobs:
         cd appsrc
         ./gradlew assembleDebug
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
       with:
         name: pos_app_debug
         path: appsrc/app/build/outputs/apk/debug/*.apk
