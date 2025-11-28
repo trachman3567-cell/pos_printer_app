@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android Debug APK (no-wrapper)
 
 on:
   push:
@@ -8,27 +8,47 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Unzip project
-      run: unzip pos_printer_app_with_cloud.zip -d appsrc
+    - name: Unzip project archive
+      # unzip the uploaded zip into appsrc folder
+      run: |
+        if [ -f pos_printer_app_with_cloud.zip ]; then
+          unzip -q pos_printer_app_with_cloud.zip -d appsrc
+        else
+          echo "ZIP pos_printer_app_with_cloud.zip not found at repo root. Ensure you uploaded it."
+          exit 2
+        fi
 
-    - name: Set up JDK
+    - name: Show appsrc tree (debug)
+      run: ls -la appsrc || true
+
+    - name: Setup JDK 17 (Temurin)
       uses: actions/setup-java@v4
       with:
-        java-version: "17"
-        distribution: "temurin"
+        distribution: temurin
+        java-version: 17
 
-    - name: Give gradlew permission
-      run: chmod +x ./appsrc/gradlew
+    - name: Install Gradle CLI
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: '8.4'   # compatible modern Gradle; change if needed
 
-    - name: Build Debug APK
+    - name: Print Gradle version (debug)
+      run: gradle --version
+
+    - name: Build Debug APK (use system gradle)
+      working-directory: appsrc
       run: |
-        cd appsrc
-        ./gradlew assembleDebug
+        # Clean then assemble debug
+        gradle clean assembleDebug --no-daemon --console=plain
+
+    - name: Show output files (debug)
+      run: ls -la appsrc/app/build/outputs/apk/debug || true
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
